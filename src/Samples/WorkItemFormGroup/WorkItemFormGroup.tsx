@@ -313,7 +313,7 @@ export class WorkItemFormGroupComponent extends React.Component<{},  WorkItemFor
               console.log("Links before")
               for (var i = 0; i < listRelationToAdd.length; i++) {
                 let rel = listRelationToAdd[i]
-                var rel_id = parseInt(rel["url"])
+                var rel_id = parseInt(rel["url"].substring(rel["url"].lastIndexOf('/') + 1))
                 console.log(" * " + rel["rel"] + " - " + rel_id + " - " + rel["attributes"])
               }
               console.log("------------------")
@@ -350,8 +350,8 @@ export class WorkItemFormGroupComponent extends React.Component<{},  WorkItemFor
                 console.log("> Test case : parcours des relations")
 
                 Object.entries(wi.relations).forEach(([key, rel]) => { 
-                  var rel_url = rel["url"].substring(rel["url"].lastIndexOf('/') + 1)
-                  var rel_id = parseInt(rel_url)
+                  var rel_url = rel["url"]
+                  var rel_id = parseInt(rel_url.substring(rel_url.lastIndexOf('/') + 1))
                   console.log("  rel=" + rel["rel"] + "-To Id=" + rel_id + "-url=" + rel_url)
                   relPattern = rel
                   // got only "Tests" links from TestCase and not to current WI
@@ -372,52 +372,56 @@ export class WorkItemFormGroupComponent extends React.Component<{},  WorkItemFor
             }
           )
         } catch(e) {
-          console.log('client.getWorkItem Error unable to retrieve WI ' + id + ' : ', e);
+          console.log('client.getWorkItem error unable to retrieve linked WI to bug ' + id + ' : ', e);
         }
       }
     }
 
-    // Check if WI are Requirements or not
+    // Check if linked WI are Requirements or not
     for (var j = 0; j < listAdditionalWiIds.length; j++) {
       var rel_url = listAdditionalWiIds[j]
-      var rel_id = parseInt(rel_url)
+      var rel_id = parseInt(rel_url.substring(rel_url.lastIndexOf('/') + 1))
       console.log("otherWiFound=" + rel_id + " - " + rel_url)
 
-      await client.getWorkItem(rel_id).then(
-        function (wi) {
-          console.log("wi:"+id+"-Title=" + wi.fields["System.Title"] + "-Type=" + wi.fields["System.WorkItemType"])
-          
-          if (wi.fields["System.WorkItemType"] && wi.fields["System.WorkItemType"] == "Requirement") {
-            console.log("# Requirement : to add !!")
+      try {
+        await client.getWorkItem(rel_id).then(
+          function (wi) {
+            console.log("wi:"+id+"-Title=" + wi.fields["System.Title"] + "-Type=" + wi.fields["System.WorkItemType"])
+            
+            if (wi.fields["System.WorkItemType"] && wi.fields["System.WorkItemType"] == "Requirement") {
+              console.log("# Requirement : to add !!")
 
-            // Checks if Requirement is not already in list
-            let relationExists = false
-            for (var i = 0; i < listRelationToAdd.length; i++) {
-              let existing_rel = listRelationToAdd[i]
-              if (existing_rel["rel"] == "System.LinkTypes.Related"
-                || existing_rel["rel"] == "System.LinkTypes.Hierarchy-Reverse") {
-                  if (existing_rel["url"] == rel_url) {
-                    relationExists = true
-                    console.log("> rel already exist to " + rel_id)
+              // Checks if Requirement is not already in list
+              let relationExists = false
+              for (var i = 0; i < listRelationToAdd.length; i++) {
+                let existing_rel = listRelationToAdd[i]
+                if (existing_rel["rel"] == "System.LinkTypes.Related"
+                  || existing_rel["rel"] == "System.LinkTypes.Hierarchy-Reverse") {
+                    if (existing_rel["url"] == rel_url) {
+                      relationExists = true
+                      console.log("> rel already exist to " + rel_id)
+                    }
                   }
-                }
-            }
-            if (relationExists == false) {
-              console.log(">> rel doesn't exist to " + rel_id)
-              if (relPattern) {
-                let newRel = Object.create(relPattern)
-                newRel.url = rel_url
-                newRel.rel = "System.LinkTypes.Related"
-                newRel.attributes = null
-                listRelationToAdd.push(newRel)
               }
-            }
+              if (relationExists == false) {
+                console.log(">> rel doesn't exist to " + rel_id)
+                if (relPattern) {
+                  let newRel = Object.create(relPattern)
+                  newRel.url = rel_url
+                  newRel.rel = "System.LinkTypes.Related"
+                  newRel.attributes = null
+                  listRelationToAdd.push(newRel)
+                }
+              }
 
-          } else {
-            console.log("# Not a req ...")
+            } else {
+              console.log("# Not a req ...")
+            }
           }
-        }
-      )
+        )
+      } catch(e) {
+        console.log('client.getWorkItem error unable to retrieve linked WI to TestCase ' + rel_id + ' : ', e);
+      }
     }
 
     //TODO remove
@@ -425,8 +429,16 @@ export class WorkItemFormGroupComponent extends React.Component<{},  WorkItemFor
     console.log("Links after")
     for (var i = 0; i < listRelationToAdd.length; i++) {
       let rel = listRelationToAdd[i]
-      var rel_id = parseInt(rel["url"])
+      var rel_id = parseInt(rel["url"].substring(rel["url"].lastIndexOf('/') + 1))
       console.log(" * " + rel["rel"] + " - " + rel_id + " - " + rel["attributes"])
+    }
+    console.log("------------------")
+
+    console.log("------------------")
+    console.log("Links definitive")
+    for (var i = 0; i < listRelationToAdd.length; i++) {
+      let rel = listRelationToAdd[i]
+      console.log(" * " + rel["rel"] + " - " + rel["url"])
     }
     console.log("------------------")
 
@@ -458,7 +470,7 @@ export class WorkItemFormGroupComponent extends React.Component<{},  WorkItemFor
           /* 
           Delete existing link
           */
-          await workItemFormService.removeWorkItemRelations(listRelationToRemove);
+          //await workItemFormService.removeWorkItemRelations(listRelationToRemove);
           await workItemFormService.save();
         }
         catch(e) {
