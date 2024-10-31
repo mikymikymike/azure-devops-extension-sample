@@ -71,12 +71,6 @@ class PanelContent extends React.Component<{}> {
                 })
             }
 
-            //re-launch render if one value is selected
-            if ( (siteValue && siteValue != "") || (versionValue && versionValue != "") || (phaseValue && phaseValue != "")) {
-                //console.log("force popup update for default values")
-                //this.forceUpdate()
-            }
-
             if (config.dialog) {
                 // Give the host frame the size of our dialog content so that the dialog can be sized appropriately.
                 // This is the case where we know our content size and can explicitly provide it to SDK.resize. If our
@@ -97,7 +91,6 @@ class PanelContent extends React.Component<{}> {
             this.isDialogOpen.value = false;
         };
 
-        alert("render")
         return (
             <div className="sample-panel flex-column flex-grow">
                     <FormItem

@@ -38,15 +38,18 @@ export class WIT_Issue extends WIT  {
     }
   
   public MapAndGetJSONdocPathDocument(witBug:WIT_Bug, customValues:CustomValues):object{    
-    //mapping one to one
+    //mapping one to one for native fields
     this["System.AreaPath"] = witBug["System.AreaPath"]
     this["System.IterationPath"] = witBug["System.IterationPath"]
     this["System.Id"] = witBug["System.Id"]
     this["System.AssignedTo"] = witBug["System.AssignedTo"]
     this["System.Title"] = witBug["System.Title"]
     this["Microsoft.VSTS.Common.Severity"] = witBug["Microsoft.VSTS.Common.Severity"]
-    this["Sogitec.ResolvedPriority"] = witBug["Microsoft.VSTS.Common.Priority"]
     this["Microsoft.VSTS.Common.Triage"] = witBug["Microsoft.VSTS.Common.Triage"]
+    this["Microsoft.VSTS.Common.Priority"] = witBug["Microsoft.VSTS.Common.Priority"]
+    this["Microsoft.VSTS.CMMI.Blocked"] = witBug["Microsoft.VSTS.CMMI.Blocked"]
+    //mapping one to one for custom fields
+    this["Sogitec.ResolvedPriority"] = witBug["Microsoft.VSTS.Common.Priority"]
     this["Sogitec.Occurence"]=witBug["Sogitec.Occurence"]
     this["Sogitec.Baselines"]=witBug["Sogitec.Baselines"]
     this["Sogitec.Collections"]=witBug["Sogitec.Collections"]
@@ -56,9 +59,7 @@ export class WIT_Issue extends WIT  {
     this["Sogitec.SystemApplicability"]=witBug["Sogitec.SystemApplicability"]
     this["Sogitec.ConfigurationApplicability"]=witBug["Sogitec.ConfigurationApplicability"]
     this["Sogitec.IntegratedInBuilds"]= witBug["Sogitec.IntegratedInBuilds"]
-    this["Microsoft.VSTS.Common.Priority"] = witBug["Microsoft.VSTS.Common.Priority"]
-    this["Microsoft.VSTS.CMMI.Blocked"] = witBug["Microsoft.VSTS.CMMI.Blocked"]
-
+    
     //get values from popup
     this["Sogitec.Version"] = customValues.workItemVersion
     this["Sogitec.Site"] = customValues.workItemSite
@@ -110,16 +111,16 @@ export class WIT_Issue extends WIT  {
       
     if (witBug["Sogitec.BlockedReason"]!== "")
     {
-    this["Microsoft.VSTS.CMMI.Analysis"] += `<b><u> Blocked Reason: </b></u><br/> ${witBug["Sogitec.BlockedReason"]}<br/>` 
+      this["Microsoft.VSTS.CMMI.Analysis"] += `<b><u> Blocked Reason: </b></u><br/> ${witBug["Sogitec.BlockedReason"]}<br/>` 
     }
     if (witBug["Microsoft.VSTS.Common.Discipline"]!== "")
     {
-    this["Microsoft.VSTS.CMMI.Analysis"] += `<b><u> Classification - Discipline: </b></u><br/> ${witBug["Microsoft.VSTS.Common.Discipline"]}<br/>` 
+      this["Microsoft.VSTS.CMMI.Analysis"] += `<b><u> Classification - Discipline: </b></u><br/> ${witBug["Microsoft.VSTS.Common.Discipline"]}<br/>` 
     }
     this["Microsoft.VSTS.CMMI.Analysis"] +=  `<b><u> Classification - Root Cause: </b></u><br/> ${witBug["Microsoft.VSTS.CMMI.RootCause"]}<br/>` 
     if (witBug["Microsoft.VSTS.Build.FoundIn"] !=="")
     {
-    this["Microsoft.VSTS.CMMI.Analysis"] += `<b><u> Build - Found In (impacted component version): </b></u><br/> ${witBug["Microsoft.VSTS.Build.FoundIn"]}<br/>`
+      this["Microsoft.VSTS.CMMI.Analysis"] += `<b><u> Build - Found In (impacted component version): </b></u><br/> ${witBug["Microsoft.VSTS.Build.FoundIn"]}<br/>`
     }
     //Corrective Action Plan Field
     if(witBug["Microsoft.VSTS.CMMI.ProposedFix"] !="")

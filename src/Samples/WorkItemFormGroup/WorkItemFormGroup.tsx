@@ -217,9 +217,9 @@ export class WorkItemFormGroupComponent extends React.Component<{},  WorkItemFor
 
   private ShowErrorMessage()
   {
-      this.setState({
-        eventContent: "Erreur rencontrée."
-      });
+    this.setState({
+      eventContent: "Erreur rencontrée."
+    });
     this.ShowSpinner(false); 
   }
 
@@ -277,7 +277,7 @@ export class WorkItemFormGroupComponent extends React.Component<{},  WorkItemFor
     }
     
     let listRelationToAdd:WorkItemRelation[]  = [];
-    let listComplRelations:WorkItemRelation[]  = [];
+    let listAdditionalRelations:WorkItemRelation[]  = [];
     let listRelationToRemove:WorkItemRelation[]  = []; //obligation de récupérer 2 listes car l'initiale sera conservée pour être supprimée au niveau du bug. L'autre est potentiellement modifiee s'il y a des liens Parent, qui deviendront des liens Related.
 
     try 
@@ -289,29 +289,17 @@ export class WorkItemFormGroupComponent extends React.Component<{},  WorkItemFor
               listRelationToAdd = JSON.parse(JSON.stringify(rel)); // parse & stringify = copie de la liste pour modification
               listRelationToRemove = rel; //recuperation de la liste initiale. non modifiee pour suppression de ces liens au niveau du bug
               
-              Object.entries(listRelationToAdd).forEach(([key, value]) => {     
+              Object.entries(listRelationToAdd).forEach(([key, value]) => {
                 //var WI_id = element["url"].substring(element["url"].lastIndexOf('/') + 1); // get the linked work item number
 
                 //Version 1 : si lien est de type Parent, alors je le converti en Related
+                //TODO vérifier si on conserve la transformation
                 switch(value["rel"]) { 
                     case "System.LinkTypes.Hierarchy-Reverse":
                     { 
                       value["rel"] = "System.LinkTypes.Related"; 
                       break; 
                     }
-                    /*case "Microsoft.VSTS.Common.TestedBy-Forward":
-                    { 
-                      console.log("link 'Tested-By' found")
-                      var WI_id = value["url"].substring(value["url"].lastIndexOf('/') + 1);
-                      var id = parseInt(WI_id)
-                      console.log("link to " + WI_id)
-                      let wi = client.getWorkItem(id).then(
-                        function (wi) {
-                          console.log("relations")
-                          console.log("-:" + wi.relations)
-                        }
-                      )
-                    } */
                     default: 
                     { 
                       //statements; 
@@ -319,6 +307,16 @@ export class WorkItemFormGroupComponent extends React.Component<{},  WorkItemFor
                     } 
                 }
               });
+
+              //TODO remove
+              console.log("------------------")
+              console.log("Links before")
+              for (var i = 0; i < listRelationToAdd.length; i++) {
+                let rel = listRelationToAdd[i]
+                var rel_id = parseInt(rel["url"])
+                console.log(" * " + rel["rel"] + " - " + rel_id + " - " + rel["attributes"])
+              }
+              console.log("------------------")
 
             } 
           }
@@ -329,47 +327,108 @@ export class WorkItemFormGroupComponent extends React.Component<{},  WorkItemFor
       return Promise.resolve("");
     }
 
-    try{
-      for (var i = 0; i < listRelationToAdd.length; i++) {
-        console.log("rel:" + listRelationToAdd[i]);
-        let value = listRelationToAdd[i]
-        //var WI_id = element["url"].substring(element["url"].lastIndexOf('/') + 1); // get the linked work item number
+    // browse links in order to get Requirements links to TestCase link to current bug
+    let listAdditionalWiIds:string[]  = [];
+    let relPattern:WorkItemRelation
+    for (var i = 0; i < listRelationToAdd.length; i++) {
+      console.log("------- new rel from bug");
+      let value = listRelationToAdd[i]
 
-        //Version 1 : si lien est de type Parent, alors je le converti en Related
-        switch(value["rel"]) { 
-            case "System.LinkTypes.Hierarchy-Reverse":
-            { 
-              value["rel"] = "System.LinkTypes.Related"; 
-              break; 
+      // Recherche des liens "Tested By"
+      if (value["rel"] == "Microsoft.VSTS.Common.TestedBy-Forward") {
+        // get "Tested By" links
+        var id = parseInt(value["url"].substring(value["url"].lastIndexOf('/') + 1))
+        console.log("link 'Tested-By' found to " + id)
+
+        try{
+          await client.getWorkItem(id, projectName, undefined, undefined, WorkItemExpand.Relations).then(
+            function (wi) {
+              console.log("wi:"+id+"-Title=" + wi.fields["System.Title"] + "-Type=" + wi.fields["System.WorkItemType"])
+              
+              // manage only Testcases : otherwise pass WI
+              if (wi.fields["System.WorkItemType"] && wi.fields["System.WorkItemType"] == "Test Case") {
+                console.log("> Test case : parcours des relations")
+
+                Object.entries(wi.relations).forEach(([key, rel]) => { 
+                  var rel_url = rel["url"].substring(rel["url"].lastIndexOf('/') + 1)
+                  var rel_id = parseInt(rel_url)
+                  console.log("  rel=" + rel["rel"] + "-To Id=" + rel_id + "-url=" + rel_url)
+                  relPattern = rel
+                  // got only "Tests" links from TestCase and not to current WI
+                  if (rel["rel"] == "Microsoft.VSTS.Common.TestedBy-Reverse") {
+                    if (idCurrentWIT != rel_id) {
+                      console.log('  >> ok add id ' + rel_id)
+                      listAdditionalWiIds.push(rel_url)
+                    } else {
+                      console.log('  > link to current WI')
+                    }
+                  } else {
+                    console.log('  > not a "Tests" relation')
+                  }
+                })
+              } else {
+                console.log("> not a test case")
+              }
             }
-            case "Microsoft.VSTS.Common.TestedBy-Forward":
-            { 
-              console.log("link 'Tested-By' found")
-              var WI_id = value["url"].substring(value["url"].lastIndexOf('/') + 1);
-              var id = parseInt(WI_id)
-              console.log("link to " + WI_id)
-
-              await client.getWorkItem(id, expand:WorkItemExpand.All).then(
-                function (wi) {
-                  console.log("wi:"+id)
-                  console.log("relations:" + wi.relations)
-                }
-              )
-
-              //client.getre
-            } 
-            default: 
-            { 
-              //statements; 
-              break; 
-            } 
+          )
+        } catch(e) {
+          console.log('client.getWorkItem Error unable to retrieve WI ' + id + ' : ', e);
         }
       }
-    } catch(e) {
-      console.log('await workItemFormService.getWorkItemRelations Error: ', e);
-      this.ShowErrorMessage()
-      return Promise.resolve("");
     }
+
+    // Check if WI are Requirements or not
+    for (var j = 0; j < listAdditionalWiIds.length; j++) {
+      var rel_url = listAdditionalWiIds[j]
+      var rel_id = parseInt(rel_url)
+      console.log("otherWiFound=" + rel_id + " - " + rel_url)
+
+      await client.getWorkItem(rel_id).then(
+        function (wi) {
+          console.log("wi:"+id+"-Title=" + wi.fields["System.Title"] + "-Type=" + wi.fields["System.WorkItemType"])
+          
+          if (wi.fields["System.WorkItemType"] && wi.fields["System.WorkItemType"] == "Requirement") {
+            console.log("# Requirement : to add !!")
+
+            // Checks if Requirement is not already in list
+            let relationExists = false
+            for (var i = 0; i < listRelationToAdd.length; i++) {
+              let existing_rel = listRelationToAdd[i]
+              if (existing_rel["rel"] == "System.LinkTypes.Related"
+                || existing_rel["rel"] == "System.LinkTypes.Hierarchy-Reverse") {
+                  if (existing_rel["url"] == rel_url) {
+                    relationExists = true
+                    console.log("> rel already exist to " + rel_id)
+                  }
+                }
+            }
+            if (relationExists == false) {
+              console.log(">> rel doesn't exist to " + rel_id)
+              if (relPattern) {
+                let newRel = Object.create(relPattern)
+                newRel.url = rel_url
+                newRel.rel = "System.LinkTypes.Related"
+                newRel.attributes = null
+                listRelationToAdd.push(newRel)
+              }
+            }
+
+          } else {
+            console.log("# Not a req ...")
+          }
+        }
+      )
+    }
+
+    //TODO remove
+    console.log("------------------")
+    console.log("Links after")
+    for (var i = 0; i < listRelationToAdd.length; i++) {
+      let rel = listRelationToAdd[i]
+      var rel_id = parseInt(rel["url"])
+      console.log(" * " + rel["rel"] + " - " + rel_id + " - " + rel["attributes"])
+    }
+    console.log("------------------")
 
     console.log("end links")
 
@@ -382,13 +441,13 @@ export class WorkItemFormGroupComponent extends React.Component<{},  WorkItemFor
       const objNewWIT = JSON.parse(JSON.stringify(newWIT));
       idNewWIT = objNewWIT["id"]; 
       urlNewWIT = objNewWIT["_links"]["html"]["href"];
-
     }
     catch(e) {
       console.log('await client.createWorkItem Error:', e);
       this.ShowErrorMessage()
-      return Promise.resolve("");;
-    }  
+      return Promise.resolve("");
+    } 
+
     /*
     Recreate relations if needed
     */
@@ -424,7 +483,7 @@ export class WorkItemFormGroupComponent extends React.Component<{},  WorkItemFor
 
     try
     {
-      //Update the issue with the relation ship
+      //Update the issue with the relationship
        //https://docs.microsoft.com/en-us/javascript/api/azure-devops-extension-api/workitemtrackingrestclient#updateworkitem-jsonpatchdocument--number--string--boolean--boolean--boolean--workitemexpand-
        
         //TODO remove delete
@@ -475,6 +534,7 @@ export class WorkItemFormGroupComponent extends React.Component<{},  WorkItemFor
     let siteValue = "";
     let versionValue = "";
     let phaseValue = "";
+    //TODO update fieldsname
     if (WITBug["SogitecPhase"] && WITBug["SogitecPhase"] != "" ) {
       phaseValue = WITBug["SogitecPhase"]
     }
