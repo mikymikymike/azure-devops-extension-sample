@@ -25,12 +25,14 @@ export class WIT
   public "Microsoft.VSTS.Common.Severity": string;
   public "Microsoft.VSTS.Common.Triage": string;
   public "Microsoft.VSTS.Common.Priority" : number;
+  public "Microsoft.VSTS.CMMI.Blocked": string;
   //Effort section
   public "Microsoft.VSTS.Scheduling.OriginalEstimate": number;
   //Detection section
   public "Sogitec.Phase": string;
   public "Sogitec.Occurence": string;
   public "Sogitec.Version": string;
+  public "Sogitec.Site": string
   //Build section
   public "Sogitec.IntegratedInBuilds": string;
   //TAB SOGITEC 
@@ -53,9 +55,11 @@ export class WIT
     this["Microsoft.VSTS.Common.Severity"] = "";
     this["Microsoft.VSTS.Common.Triage"] = "";
     this["Microsoft.VSTS.Common.Priority"] = -1;
+    this["Microsoft.VSTS.CMMI.Blocked"]=""; 
     this["Microsoft.VSTS.Scheduling.OriginalEstimate"] = 0; //can be null
-    /*this["Sogitec.Phase"]="";
+    this["Sogitec.Phase"]="";
     this["Sogitec.Version"] = "";
+    this["Sogitec.Site"] = "";
     this["Sogitec.Occurence"]="";
     this["Sogitec.IntegratedInBuilds"] = "";
     this["Microsoft.VSTS.Build.IntegrationBuild"]=""; 
@@ -65,7 +69,7 @@ export class WIT
     this["Sogitec.SerialNumber"] = "";
     this["Sogitec.BusinessApplicability"] = "";
     this["Sogitec.SystemApplicability"] = "";
-    this["Sogitec.ConfigurationApplicability"] = "";*/
+    this["Sogitec.ConfigurationApplicability"] = "";
   }
  
   protected JSONPathDocumentForCreate():object{    

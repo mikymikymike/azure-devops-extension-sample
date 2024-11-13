@@ -19,13 +19,10 @@ export class WIT_Issue extends WIT  {
   public "System.Description": string;
   public "Microsoft.VSTS.CMMI.Analysis": string;
   public "Microsoft.VSTS.CMMI.CorrectiveActionActualResolution": string;
-//Detection section
-  public "Sogitec.Site": string
 //Classification
   public "Sogitec.FixedSimulatorVersion": string;
 //Analysis section
   public "Sogitec.ResolvedPriority": number;
-  public "Microsoft.VSTS.CMMI.Blocked": string;
 
 
   public constructor() {
@@ -33,8 +30,7 @@ export class WIT_Issue extends WIT  {
      this["System.Description"]="";
      this["Microsoft.VSTS.CMMI.Analysis"]="";
      this["Microsoft.VSTS.CMMI.CorrectiveActionActualResolution"]="";
-     /*this["Sogitec.Site"] = "";
-     this["Sogitec.ResolvedPriority"]=-1;*/
+     this["Sogitec.ResolvedPriority"]=-1;
     }
   
   public MapAndGetJSONdocPathDocument(witBug:WIT_Bug, customValues:CustomValues):object{    
@@ -49,7 +45,7 @@ export class WIT_Issue extends WIT  {
     this["Microsoft.VSTS.Common.Priority"] = witBug["Microsoft.VSTS.Common.Priority"]
     this["Microsoft.VSTS.CMMI.Blocked"] = witBug["Microsoft.VSTS.CMMI.Blocked"]
     
-    /*
+    
     //mapping one to one for custom fields
     this["Sogitec.ResolvedPriority"] = witBug["Microsoft.VSTS.Common.Priority"]
     this["Sogitec.Occurence"]=witBug["Sogitec.Occurence"]
@@ -65,7 +61,7 @@ export class WIT_Issue extends WIT  {
     //get values from popup
     this["Sogitec.Version"] = customValues.workItemVersion
     this["Sogitec.Site"] = customValues.workItemSite
-    this["Sogitec.Phase"] = customValues.workItemPhase*/
+    this["Sogitec.Phase"] = customValues.workItemPhase
 
     
     //Original estimate : this field cannot be null otherwise it generates an error. Don't know why. 

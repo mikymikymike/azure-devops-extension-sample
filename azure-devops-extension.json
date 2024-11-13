@@ -2,7 +2,7 @@
     "manifestVersion": 1,
     "id": "samples",
     "publisher": "mickaelhutch",
-    "version": "1.0.520",
+    "version": "1.0.524",
     "name": "Convert Bug To Issue",
     "description": "Azure DevOps extension sample",
     "categories": [

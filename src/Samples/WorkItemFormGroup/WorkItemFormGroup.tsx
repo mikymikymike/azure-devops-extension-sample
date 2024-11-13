@@ -308,7 +308,7 @@ export class WorkItemFormGroupComponent extends React.Component<{},  WorkItemFor
                 }
               });
 
-              //TODO remove
+              /*
               console.log("------------------")
               console.log("Links before")
               for (var i = 0; i < listRelationToAdd.length; i++) {
@@ -317,6 +317,7 @@ export class WorkItemFormGroupComponent extends React.Component<{},  WorkItemFor
                 console.log(" * " + rel["rel"] + " - " + rel_id + " - " + rel["attributes"])
               }
               console.log("------------------")
+              */
 
             } 
           }
@@ -327,7 +328,10 @@ export class WorkItemFormGroupComponent extends React.Component<{},  WorkItemFor
       return Promise.resolve("");
     }
 
-    // browse links in order to get Requirements links to TestCase link to current bug
+    /* 
+      Browse links in order to get Requirements links to TestCase link to current bug
+    */
+    // Get TestedBy links
     let listAdditionalWiIds:string[]  = [];
     let relPattern:WorkItemRelation
     for (var i = 0; i < listRelationToAdd.length; i++) {
@@ -343,31 +347,31 @@ export class WorkItemFormGroupComponent extends React.Component<{},  WorkItemFor
         try{
           await client.getWorkItem(id, projectName, undefined, undefined, WorkItemExpand.Relations).then(
             function (wi) {
-              console.log("wi:"+id+"-Title=" + wi.fields["System.Title"] + "-Type=" + wi.fields["System.WorkItemType"])
+              //console.log("wi:"+id+"-Title=" + wi.fields["System.Title"] + "-Type=" + wi.fields["System.WorkItemType"])
               
               // manage only Testcases : otherwise pass WI
               if (wi.fields["System.WorkItemType"] && wi.fields["System.WorkItemType"] == "Test Case") {
-                console.log("> Test case : parcours des relations")
+                //console.log("> Test case : parcours des relations")
 
                 Object.entries(wi.relations).forEach(([key, rel]) => { 
                   var rel_url = rel["url"]
                   var rel_id = parseInt(rel_url.substring(rel_url.lastIndexOf('/') + 1))
-                  console.log("  rel=" + rel["rel"] + "-To Id=" + rel_id + "-url=" + rel_url)
+                  //console.log("  rel=" + rel["rel"] + "-To Id=" + rel_id + "-url=" + rel_url)
                   relPattern = rel
                   // got only "Tests" links from TestCase and not to current WI
                   if (rel["rel"] == "Microsoft.VSTS.Common.TestedBy-Reverse") {
                     if (idCurrentWIT != rel_id) {
-                      console.log('  >> ok add id ' + rel_id)
+                      //console.log('  >> ok add id ' + rel_id)
                       listAdditionalWiIds.push(rel_url)
                     } else {
-                      console.log('  > link to current WI')
+                      //console.log('  > link to current WI')
                     }
                   } else {
-                    console.log('  > not a "Tests" relation')
+                    //console.log('  > not a "Tests" relation')
                   }
                 })
               } else {
-                console.log("> not a test case")
+                //console.log("> not a test case")
               }
             }
           )
@@ -381,15 +385,15 @@ export class WorkItemFormGroupComponent extends React.Component<{},  WorkItemFor
     for (var j = 0; j < listAdditionalWiIds.length; j++) {
       var rel_url = listAdditionalWiIds[j]
       var rel_id = parseInt(rel_url.substring(rel_url.lastIndexOf('/') + 1))
-      console.log("otherWiFound=" + rel_id + " - " + rel_url)
+      //console.log("otherWiFound=" + rel_id + " - " + rel_url)
 
       try {
         await client.getWorkItem(rel_id).then(
           function (wi) {
-            console.log("wi:"+id+"-Title=" + wi.fields["System.Title"] + "-Type=" + wi.fields["System.WorkItemType"])
+            //console.log("wi:"+id+"-Title=" + wi.fields["System.Title"] + "-Type=" + wi.fields["System.WorkItemType"])
             
             if (wi.fields["System.WorkItemType"] && wi.fields["System.WorkItemType"] == "Requirement") {
-              console.log("# Requirement : to add !!")
+              //console.log("# Requirement : to add !!")
 
               // Checks if Requirement is not already in list
               let relationExists = false
@@ -399,12 +403,12 @@ export class WorkItemFormGroupComponent extends React.Component<{},  WorkItemFor
                   || existing_rel["rel"] == "System.LinkTypes.Hierarchy-Reverse") {
                     if (existing_rel["url"] == rel_url) {
                       relationExists = true
-                      console.log("> rel already exist to " + rel_id)
+                      //console.log("> rel already exist to " + rel_id)
                     }
                   }
               }
               if (relationExists == false) {
-                console.log(">> rel doesn't exist to " + rel_id)
+                //console.log(">> rel doesn't exist to " + rel_id)
                 if (relPattern) {
                   let newRel = Object.create(relPattern)
                   newRel.url = rel_url
@@ -415,7 +419,7 @@ export class WorkItemFormGroupComponent extends React.Component<{},  WorkItemFor
               }
 
             } else {
-              console.log("# Not a req ...")
+              //console.log("# Not a req ...")
             }
           }
         )
@@ -425,6 +429,7 @@ export class WorkItemFormGroupComponent extends React.Component<{},  WorkItemFor
     }
 
     //TODO remove
+    /*
     console.log("------------------")
     console.log("Links after")
     for (var i = 0; i < listRelationToAdd.length; i++) {
@@ -443,6 +448,7 @@ export class WorkItemFormGroupComponent extends React.Component<{},  WorkItemFor
     console.log("------------------")
 
     console.log("end links")
+    */
 
     let urlNewWIT : string="";
     let idNewWIT : number ;
@@ -470,7 +476,7 @@ export class WorkItemFormGroupComponent extends React.Component<{},  WorkItemFor
           /* 
           Delete existing link
           */
-          //await workItemFormService.removeWorkItemRelations(listRelationToRemove);
+          await workItemFormService.removeWorkItemRelations(listRelationToRemove);
           await workItemFormService.save();
         }
         catch(e) {
@@ -498,8 +504,7 @@ export class WorkItemFormGroupComponent extends React.Component<{},  WorkItemFor
       //Update the issue with the relationship
        //https://docs.microsoft.com/en-us/javascript/api/azure-devops-extension-api/workitemtrackingrestclient#updateworkitem-jsonpatchdocument--number--string--boolean--boolean--boolean--workitemexpand-
        
-        //TODO remove delete
-        //const returnObj = await client.deleteWorkItem(idCurrentWIT,projectName,false);  
+      const returnObj = await client.deleteWorkItem(idCurrentWIT,projectName,false);  
     }
     catch(e) {
         console.log('await client.deleteWorkItem Error: ', e);
@@ -575,9 +580,9 @@ export class WorkItemFormGroupComponent extends React.Component<{},  WorkItemFor
       versionValue = WITBug["Custom.SogitecVersion"]
     }
 
-    console.log("versionValue=" + versionValue);
-    console.log("siteValue=" + siteValue);
-    console.log("phaseValue=" + phaseValue);
+    //console.log("versionValue=" + versionValue);
+    //console.log("siteValue=" + siteValue);
+    //console.log("phaseValue=" + phaseValue);
 
     if (versionValue == "" || siteValue == "" || phaseValue == "" ) {
       dialogService.openCustomDialog<CustomValues | undefined>(SDK.getExtensionContext().id + ".panel-content", {

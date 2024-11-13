@@ -18,7 +18,6 @@ export class WIT_Bug extends WIT {
    public "Microsoft.VSTS.TCM.SystemInfo": string;
    public "Microsoft.VSTS.CMMI.ProposedFix": string;
 //Planning section
-  public "Microsoft.VSTS.CMMI.Blocked": string;
   public "Sogitec.BlockedReason": string;
 //Classification section
   public "Microsoft.VSTS.Common.Discipline": string;
@@ -41,7 +40,6 @@ export class WIT_Bug extends WIT {
        this["Microsoft.VSTS.CMMI.Symptom"]="";
        this["Microsoft.VSTS.TCM.SystemInfo"]="";
        this["Microsoft.VSTS.CMMI.ProposedFix"]=""; 
-       this["Microsoft.VSTS.CMMI.Blocked"]=""; 
        this["Sogitec.BlockedReason"]="";
        this["Microsoft.VSTS.Common.Discipline"]="";
        this["Microsoft.VSTS.CMMI.RootCause"]=""; 
