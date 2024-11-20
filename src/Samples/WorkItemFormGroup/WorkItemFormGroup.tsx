@@ -232,9 +232,9 @@ export class WorkItemFormGroupComponent extends React.Component<{},  WorkItemFor
     );
 
     console.log("CreateCopyCurrentWIT.start")
-    console.log("customValues.workItemSite="+customValues.workItemSite)
+    /*console.log("customValues.workItemSite="+customValues.workItemSite)
     console.log("customValues.workItemVersion="+customValues.workItemVersion)
-    console.log("customValues.workItemPhase="+customValues.workItemPhase)
+    console.log("customValues.workItemPhase="+customValues.workItemPhase)*/
 
     const idCurrentWIT = await workItemFormService.getId();   
     const opt  = new monOpt();
@@ -293,10 +293,11 @@ export class WorkItemFormGroupComponent extends React.Component<{},  WorkItemFor
                 //var WI_id = element["url"].substring(element["url"].lastIndexOf('/') + 1); // get the linked work item number
 
                 //Version 1 : si lien est de type Parent, alors je le converti en Related
-                //TODO vérifier si on conserve la transformation
+                //Transformation lien Parent en lien Related à vérifier dans les instructions
                 switch(value["rel"]) { 
                     case "System.LinkTypes.Hierarchy-Reverse":
                     { 
+                      console.log("Convert link parent Req=>Bug to Related Req=>Issue ");
                       value["rel"] = "System.LinkTypes.Related"; 
                       break; 
                     }
@@ -335,7 +336,7 @@ export class WorkItemFormGroupComponent extends React.Component<{},  WorkItemFor
     let listAdditionalWiIds:string[]  = [];
     let relPattern:WorkItemRelation
     for (var i = 0; i < listRelationToAdd.length; i++) {
-      console.log("------- new rel from bug");
+      //console.log("------- new rel from bug");
       let value = listRelationToAdd[i]
 
       // Recherche des liens "Tested By"
@@ -408,7 +409,7 @@ export class WorkItemFormGroupComponent extends React.Component<{},  WorkItemFor
                   }
               }
               if (relationExists == false) {
-                //console.log(">> rel doesn't exist to " + rel_id)
+                console.log("Add link from issue to Req " + rel_id)
                 if (relPattern) {
                   let newRel = Object.create(relPattern)
                   newRel.url = rel_url
@@ -428,7 +429,7 @@ export class WorkItemFormGroupComponent extends React.Component<{},  WorkItemFor
       }
     }
 
-    //TODO remove
+    //Log
     /*
     console.log("------------------")
     console.log("Links after")
@@ -551,32 +552,40 @@ export class WorkItemFormGroupComponent extends React.Component<{},  WorkItemFor
     let siteValue = "";
     let versionValue = "";
     let phaseValue = "";
-    //TODO update fieldsname
-    if (WITBug["SogitecPhase"] && WITBug["SogitecPhase"] != "" ) {
-      phaseValue = WITBug["SogitecPhase"]
-    }
+
+    //Get Bug Phase value
     if (WITBug["Sogitec.Phase"] && WITBug["Sogitec.Phase"] != "" ) {
       phaseValue = WITBug["Sogitec.Phase"]
     }
-    if (WITBug["Custom.SogitecPhase"] && WITBug["Custom.SogitecPhase"] != "" ) {
+    else if (WITBug["SogitecPhase"] && WITBug["SogitecPhase"] != "" ) {
+      phaseValue = WITBug["SogitecPhase"]
+    }
+    else if (WITBug["Custom.SogitecPhase"] && WITBug["Custom.SogitecPhase"] != "" ) {
       phaseValue = WITBug["Custom.SogitecPhase"]
     }
-    if (WITBug["SogitecSite"] && WITBug["SogitecSite"] != "" ) {
-      siteValue = WITBug["SogitecSite"]
-    }
+
+    //Get Bug Site value
     if (WITBug["Sogitec.Site"] && WITBug["Sogitec.Site"] != "" ) {
       siteValue = WITBug["Sogitec.Site"]
     }
-    if (WITBug["Custom.SogitecSite"] && WITBug["Custom.SogitecSite"] != "" ) {
+    else if (WITBug["SogitecSite"] && WITBug["SogitecSite"] != "" ) {
+      siteValue = WITBug["SogitecSite"]
+    }
+    else if (WITBug["Custom.SogitecSite"] && WITBug["Custom.SogitecSite"] != "" ) {
       siteValue = WITBug["Custom.SogitecSite"]
     }
-    if (WITBug["SogitecVersion"] && WITBug["SogitecVersion"] != "" ) {
-      versionValue = WITBug["SogitecVersion"]
+
+    //Get Bug Version value
+    if (WITBug["Microsoft.VSTS.Build.FoundIn"] && WITBug["Microsoft.VSTS.Build.FoundIn"] != "" ) {
+      versionValue = WITBug["Microsoft.VSTS.Build.FoundIn"]
     }
-    if (WITBug["Sogitec.Version"] && WITBug["Sogitec.Version"] != "" ) {
+    else if (WITBug["Sogitec.Version"] && WITBug["Sogitec.Version"] != "" ) {
       versionValue = WITBug["Sogitec.Version"]
     }
-    if (WITBug["Custom.SogitecVersion"] && WITBug["Custom.SogitecVersion"] != "" ) {
+    else if (WITBug["SogitecVersion"] && WITBug["SogitecVersion"] != "" ) {
+      versionValue = WITBug["SogitecVersion"]
+    }
+    else if (WITBug["Custom.SogitecVersion"] && WITBug["Custom.SogitecVersion"] != "" ) {
       versionValue = WITBug["Custom.SogitecVersion"]
     }
 

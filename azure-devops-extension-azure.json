@@ -1,11 +1,10 @@
 {
     "manifestVersion": 1,
-    "id": "bug2issue",
-    "publisher": "Sogitec",
-    "version": "2.0.3",
-    "name": "Bug to issue",
-    "description": "Azure DevOps Extension to convert Bug into an Issue",
-    "public":false,
+    "id": "samples",
+    "publisher": "mickaelhutch",
+    "version": "2.0.2",
+    "name": "Convert Bug To Issue",
+    "description": "Azure DevOps extension sample",
     "categories": [
         "Azure Boards"
     ],
